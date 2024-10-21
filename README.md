@@ -1,9 +1,8 @@
 Requirements Recap:
-1) Use ERC-4626 as the base vault structure (OpenZeppelin’s implementation).
-2) Override the deposit, withdraw, and totalAssets functions to interact with Aave’s ETHx market.
-3) The vault should handle ETH wrapping (since ETH needs to be wrapped into WETH for Aave).
-4) Interact with Aave's Pool contract to deposit and withdraw assets.
-
+1) Use ERC-4626 as the base vault structure (OpenZeppelin’s implementation).✅
+2) Override the deposit, withdraw, and totalAssets functions to interact with Aave’s ETHx market. ✅
+3) The vault should handle ETH wrapping (since ETH needs to be wrapped into WETH for Aave).✅
+4) Interact with Aave's Pool contract to deposit and withdraw assets. ✅
 
 ## Foundry
 
