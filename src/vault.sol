@@ -15,7 +15,6 @@ contract Vault is ERC4626 {
     Ipool public pool; // for reference to the Aave pool interface for deposits and withdrawals.
     WETH9 public weth; // for  reference to the WETH contract, allows to wrap/unwrap Ether.
     address public wethAddress; // stores the address of the WETH contract on the blockchain.
-    address public poolAddress; // stores address of the Aave pool contract that vault will interact with.
     address public aWethAddress;
 
     // vault will be working with WETH as the underlying asset. It allows the vault to manage WETH in accordance with the ERC-4626 standard.
@@ -26,10 +25,9 @@ contract Vault is ERC4626 {
         pool = Ipool(_poolAddress); // allows the contract to interact with the Aave pool's functions
         weth = WETH9(_wethAddress); // allows the contract to call functions on the WETH contract, such as wrapping or unwrapping ETH.
         wethAddress = _wethAddress; // provides the address of the WETH contract within the contract.
-        poolAddress = _poolAddress; // stores the address of the Aave pool for future use.
 
         // dinamically retrieve the aWETH address from Aave's Pool
-        // refers to the address of the aToken contract on Aave's platform
+        // aTokenAddress gives us the address of the aToken that corresponds to the aWETH token in Aave.
         aWethAddress = pool.getReserveData(_wethAddress).aTokenAddress;
     }
 
