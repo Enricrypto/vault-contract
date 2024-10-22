@@ -12,22 +12,26 @@ import "lib/aave-v3-core/contracts/interfaces/IPool.sol";
 import "lib/aave-v3-core/contracts/dependencies/weth/WETH9.sol";
 
 contract Vault is ERC4626 {
-    Ipool public pool; // for reference to the Aave pool interface for deposits and withdrawals.
+    IPool public pool; // for reference to the Aave pool interface for deposits and withdrawals.
     WETH9 public weth; // for  reference to the WETH contract, allows to wrap/unwrap Ether.
     address public wethAddress; // stores the address of the WETH contract on the blockchain.
+    address public poolAddress; // stores the Aave pool contract address.
     address public aWethAddress;
 
     // vault will be working with WETH as the underlying asset. It allows the vault to manage WETH in accordance with the ERC-4626 standard.
     constructor(
         address _poolAddress,
-        address _wethAddress
-    ) ERC4626(IERC20(_wethaddress)) {
-        pool = Ipool(_poolAddress); // allows the contract to interact with the Aave pool's functions
-        weth = WETH9(_wethAddress); // allows the contract to call functions on the WETH contract, such as wrapping or unwrapping ETH.
-        wethAddress = _wethAddress; // provides the address of the WETH contract within the contract.
+        address payable _wethAddress
+    )
+        ERC20("My Vault", "VLT") // Call the ERC20 constructor for name and symbol
+        ERC4626(IERC20(_wethAddress)) // Call the ERC4626 constructor with the underlying asset (WETH)
+    {
+        pool = IPool(_poolAddress); // Initialize the Aave pool interface.
+        weth = WETH9(_wethAddress); // Initialize the WETH contract.
+        wethAddress = _wethAddress; // Store the WETH contract address.
+        poolAddress = _poolAddress; // Store the Aave pool address.
 
-        // dinamically retrieve the aWETH address from Aave's Pool
-        // aTokenAddress gives us the address of the aToken that corresponds to the aWETH token in Aave.
+        // Dynamically retrieve the aWETH address from Aave's Pool
         aWethAddress = pool.getReserveData(_wethAddress).aTokenAddress;
     }
 
@@ -81,7 +85,7 @@ contract Vault is ERC4626 {
         return shares;
     }
 
-    function totalAssets() public override returns (uint256) {
+    function totalAssets() public view override returns (uint256) {
         // Assets that are held in the vault and may be deposited into Aave soon.
         uint256 wethBalance = weth.balanceOf(address(this));
 
