@@ -4,3 +4,7 @@ out = "out"
 libs = ["lib"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[profile.anvil]
+fork_url = "https://mainnet.infura.io/v3/080ce310be6f452bacc7868005900063"
+fork_block_number = 17300000  # Example block number

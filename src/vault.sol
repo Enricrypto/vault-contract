@@ -8,91 +8,111 @@ import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol"
 // Aave V3 Pool interface for deposit/withdraw functionality
 import "lib/aave-v3-core/contracts/interfaces/IPool.sol";
 
-// Interface for WETH (for wrapping/unwrapping ETH)
-import "lib/aave-v3-core/contracts/dependencies/weth/WETH9.sol";
+// Interfaces for Stader's ETHx integration
+import "./Interfaces/IStaderConfig.sol"; // Send ETH and receive minted ETHx token.
+import "./Interfaces/IStaderStakePoolManager.sol";
 
 contract Vault is ERC4626 {
     IPool public pool; // for reference to the Aave pool interface for deposits and withdrawals.
-    WETH9 public weth; // for  reference to the WETH contract, allows to wrap/unwrap Ether.
-    address public wethAddress; // stores the address of the WETH contract on the blockchain.
-    address public poolAddress; // stores the Aave pool contract address.
-    address public aWethAddress;
+    IStaderConfig public staderConfig; // Reference to Stader's configuration contract.
+    IStaderStakePoolManager public stakePoolManager; // Stake pool manager for ETH staking
+    address public ethxAddress; // stores the address of the ETHx contract
+    address public userWithdrawManager; // address of the user withdrawal manager
+    address public aEthxAddress; // Address of the aETHx token
+
+    // Mainnet config address. ** Change to testnet address as needed **
+    address private constant _STADER_CONFIG_ADDRESS =
+        0x4ABEF2263d5A5ED582FC9A9789a41D85b68d69DB;
 
     // vault will be working with WETH as the underlying asset. It allows the vault to manage WETH in accordance with the ERC-4626 standard.
     constructor(
-        address _poolAddress,
-        address payable _wethAddress
+        address _poolAddress
     )
         ERC20("My Vault", "VLT") // Call the ERC20 constructor for name and symbol
-        ERC4626(IERC20(_wethAddress)) // Call the ERC4626 constructor with the underlying asset (WETH)
+        ERC4626(IERC20(_STADER_CONFIG_ADDRESS)) // Replace with ETHx token address from the config
     {
         pool = IPool(_poolAddress); // Initialize the Aave pool interface.
-        weth = WETH9(_wethAddress); // Initialize the WETH contract.
-        wethAddress = _wethAddress; // Store the WETH contract address.
-        poolAddress = _poolAddress; // Store the Aave pool address.
+        staderConfig = IStaderConfig(_STADER_CONFIG_ADDRESS); // Initialize the Stader config.
 
-        // Dynamically retrieve the aWETH address from Aave's Pool
-        aWethAddress = pool.getReserveData(_wethAddress).aTokenAddress;
-    }
+        ethxAddress = staderConfig.getETHxToken(); // Get the ETHx token address from Stader config.
+        userWithdrawManager = staderConfig.getUserWithdrawManager(); // Get user withdrawal manager address.
 
-    // Receive ETH and wrap is as WETH
-    receive() external payable {
-        weth.deposit{value: msg.value}(); // calls the deposit function of the WETH contract, which is responsible for converting ETH into WETH
+        // Dynamically retrieve the aETHx address from Aave's pool
+        aEthxAddress = pool.getReserveData(ethxAddress).aTokenAddress;
+
+        // Approve the Aave pool to spend ETHx
+        IERC20(ethxAddress).approve(address(pool), type(uint256).max);
     }
 
     function deposit(
-        uint256 amount,
-        address receiver
-    ) public override returns (uint256 shares) {
-        // Approve the Aave pool to spend WETH
-        weth.approve(address(pool), amount);
+        uint256 _amount,
+        address _receiver
+    ) public payable override returns (uint256 shares) {
+        require(msg.value == _amount, "Invalid ETH amount sent");
 
-        // Deposit WETH into Aaave
-        // wethAddress is the ERC20 token that is being supplied, address of the WETH token
-        pool.supply(wethAddress, amount, address(this), 0); // 0 is the referral code that we are not using in this case.
+        // Step 1: Convert ETH to ETHx by staking via Stader's stake pool manager
+        uint256 amountInETHx = stakePoolManager.deposit{value: _amount}(
+            address(this)
+        );
 
-        // Call ERC4626 to mint shares for the user
-        // Aave issues aTokens(shares) that represent the vault's share and accrued interest
-        // super is used to call a function from the parent contract in this case from the ERC4626 contract
-        // using it because I'm overriding the deposit function in the contract but still want to invoke the original logic from the parent contract ERC4626.
-        shares = super.deposit(amount, receiver);
+        // Step 2: Deposit ETHx into Aave
+        pool.supply(ethxAddress, amountInETHx, address(this), 0); // Referral code is zero, assuming none used
+
+        // Step 3: Mint vault shares equivalent to the deposit
+        shares = super.deposit(amountInETHx, _receiver);
 
         return shares;
     }
 
     function withdraw(
-        uint256 amount, // Amount of WETH (or underlying ETH) to withdraw
-        address receiver, // Address that will receive the ETH
-        address owner // Address whose shares are being redeemed
+        uint256 _amount,
+        address _receiver,
+        address _owner
     ) public override returns (uint256 shares) {
-        // calculate and burn shares
-        shares = previewWithdraw(amount); // previewWithdraw is a function from the ERC4626 contract.
+        uint256 amountInETHx = convertToETHx(_amount); // Calculate equivalent ETHx
 
-        // Burn vault shares from the owner (handled by the ERC4626 implementation)
-        _burn(owner, shares);
+        // Step 1: Burn shares for the equivalent amount in ETHx
+        shares = super.withdraw(amountInETHx, _receiver, _owner);
 
-        // withdraw WETH from Aave's pool. Withdraw is a function from the Aave's contract.
-        pool.withdraw(wethAddress, amount, address(this));
+        // Step 2: Withdraw ETHx from Aave pool to the vault
+        pool.withdraw(ethxAddress, amountInETHx, address(this));
 
-        // Unwrap WETH back to ETH
-        weth.withdraw(amount);
-
-        // Transfer ETH to receiver
-        // call is a low-level function in Solidity that can be used to send ETH and interact with another contract or address.
-        (bool success, ) = receiver.call{value: amount}(""); // ('') means not additional data is being sent, just ETH.
-        require(success, "ETH transfer failed");
+        // Step 3: Request unstake to redeem ETH via Stader’s user withdrawal manager
+        userWithdrawManager.requestWithdraw(amountInETHx, _receiver);
 
         return shares;
     }
 
     function totalAssets() public view override returns (uint256) {
-        // Assets that are held in the vault and may be deposited into Aave soon.
-        uint256 wethBalance = weth.balanceOf(address(this));
+        // 1. Balance of ETHx directly held in the vault
+        uint256 ethxBalance = IERC20(ethxAddress).balanceOf(address(this));
 
-        // Assets that are already deposited into Aave and accruing interest.
-        uint256 aWethBalance = IERC20(aWethAddress).balanceOf(address(this));
+        // Assets in ETHx that are already deposited into Aave and accruing interest.
+        uint256 aEthxBalance = IERC20(aEthxAddress).balanceOf(address(this));
 
-        // total assets = WETH in vault + ETH in Aave (represented by aWETH)
-        return wethBalance + aWethBalance;
+        // 3. Total assets in ETHx: ETHx held in vault + ETHx held in Aave (via aETHx)
+        return ethxBalance + aEthxBalance;
+    }
+
+    // Function to compound rewards in the Vault by reinvesting `aETHx` into `ETHx`
+    function compoundRewards() external {
+        // Step 1: Retrieve the vault's aETHx balance
+        uint256 aEthxBalance = IERC20(aEthxAddress).balanceOf(address(this));
+        require(aEthxBalance > 0, "No rewards to compound");
+
+        // Step 2: Convert aETHx to ETHx by withdrawing from Aave
+        pool.withdraw(aEthxAddress, aEthxRewards, address(this));
+
+        // Step 3: After the withdrawal, the contract holds ETHx. Restake it in Aave to compound.
+        // Redeposit ETHx into Aave pool
+        pool.supply(ethxAddress, aEthxBalance, address(this), 0); // No referral code
+    }
+
+    // ** ======= HELPER FUNCTIONS ==========  **
+
+    // Helper function to calculate the amount of ETHx in relation to ETH
+    function convertToETHx(uint256 ethAmount) internal pure returns (uint256) {
+        // Assuming a 1:1 peg between ETH and ETHx
+        return ethAmount;
     }
 }
