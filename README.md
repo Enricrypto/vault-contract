@@ -153,5 +153,5 @@ NEW TASKS
 1) use the EthX market instead of weth ✅
 2) add another function to compound rewards ✅
 3) that function should claim the stader token ✅ 
-4) than use uniswapV3 to sell the Stader token for ETH/USDC ✅ 
+4) function that uses uniswapV3 to sell the Stader token for ETH/USDC ✅ 
 5) use vm.warp or similar to manipulate time on your fork tests so you get enough rewards in your test 

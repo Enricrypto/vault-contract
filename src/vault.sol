@@ -12,13 +12,18 @@ import "lib/aave-v3-core/contracts/interfaces/IPool.sol";
 import "./Interfaces/IStaderConfig.sol"; // Send ETH and receive minted ETHx token.
 import "./Interfaces/IStaderStakePoolManager.sol";
 
+// Import Uniswap's ISwapRouter interface
+import "lib/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+
 contract Vault is ERC4626 {
     IPool public pool; // for reference to the Aave pool interface for deposits and withdrawals.
     IStaderConfig public staderConfig; // Reference to Stader's configuration contract.
     IStaderStakePoolManager public stakePoolManager; // Stake pool manager for ETH staking
+    ISwapRouter public swapRouter; // Uniswap V3 swap router instance
     address public ethxAddress; // stores the address of the ETHx contract
     address public userWithdrawManager; // address of the user withdrawal manager
     address public aEthxAddress; // Address of the aETHx token
+    address public usdcAddress; // USDC token address
 
     // Mainnet config address. ** Change to testnet address as needed **
     address private constant _STADER_CONFIG_ADDRESS =
@@ -26,7 +31,9 @@ contract Vault is ERC4626 {
 
     // vault will be working with WETH as the underlying asset. It allows the vault to manage WETH in accordance with the ERC-4626 standard.
     constructor(
-        address _poolAddress
+        address _poolAddress,
+        address _swapRouterAddress,
+        address _usdcAddress
     )
         ERC20("My Vault", "VLT") // Call the ERC20 constructor for name and symbol
         ERC4626(IERC20(_STADER_CONFIG_ADDRESS)) // Replace with ETHx token address from the config
@@ -34,11 +41,17 @@ contract Vault is ERC4626 {
         pool = IPool(_poolAddress); // Initialize the Aave pool interface.
         staderConfig = IStaderConfig(_STADER_CONFIG_ADDRESS); // Initialize the Stader config.
 
+        // Uniswap Router address
+        swapRouter = ISwapRouter(_swapRouterAddress);
+
         ethxAddress = staderConfig.getETHxToken(); // Get the ETHx token address from Stader config.
         userWithdrawManager = staderConfig.getUserWithdrawManager(); // Get user withdrawal manager address.
 
         // Dynamically retrieve the aETHx address from Aave's pool
         aEthxAddress = pool.getReserveData(ethxAddress).aTokenAddress;
+
+        // USDC address
+        usdcAddress = _usdcAddress;
 
         // Approve the Aave pool to spend ETHx
         IERC20(ethxAddress).approve(address(pool), type(uint256).max);
