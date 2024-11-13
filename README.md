@@ -153,5 +153,8 @@ NEW TASKS
 1) use the EthX market instead of weth ✅
 2) add another function to compound rewards ✅
 3) that function should claim the stader token ✅ 
+Sell SD token for ETH, stake ETH for ETHx on Stader and then stake it on Aave
 4) function that uses uniswapV3 to sell the Stader token for ETH/USDC ✅ 
 5) use vm.warp or similar to manipulate time on your fork tests so you get enough rewards in your test 
+
+** issue when overiding the deposit function from the ERC4626, as it's non payable and I need a payable function **
