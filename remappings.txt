@@ -1,0 +1,7 @@
+openzeppelin-contracts/=/Users/enriqueibarra/vault-contract/lib/openzeppelin-contracts/
+openzeppelin/=/Users/enriqueibarra/vault-contract/lib/openzeppelin-contracts/contracts/
+v3-core/=/Users/enriqueibarra/vault-contract/lib/v3-core/
+v3-periphery/=/Users/enriqueibarra/vault-contract/lib/v3-periphery/
+aave-v3-core/=/Users/enriqueibarra/vault-contract/lib/aave-v3-core/
+aave-v3-origin/=/Users/enriqueibarra/vault-contract/lib/aave-v3-origin/
+
