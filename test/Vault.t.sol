@@ -27,14 +27,21 @@ contract Tester is Test {
     ISwapRouter public swapRouter;
 
     // Constants for addresses
-    address constant _STADER_STAKE_POOL_ADDRESS = 0xcf5EA1b38380f6aF39068375516Daf40Ed70D299;
-    address constant _POOL_ADDRESSES_PROVIDER = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
-    address constant _SWAP_ROUTER_ADDRESS = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
+    address constant _STADER_STAKE_POOL_ADDRESS =
+        0xcf5EA1b38380f6aF39068375516Daf40Ed70D299;
+    address constant _POOL_ADDRESSES_PROVIDER =
+        0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
+    address constant _SWAP_ROUTER_ADDRESS =
+        0xE592427A0AEce92De3Edee1F18E0157C05861564;
     address constant _WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address constant _STADER_CONFIG_ADDRESS = 0x4ABEF2263d5A5ED582FC9A9789a41D85b68d69DB;
-    address constant _REWARDS_CONTROLLER_ADDRESS = 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
-    address constant _AETHX_TOKEN_ADDRESS = 0x1c0E06a0b1A4c160c17545FF2A951bfcA57C0002;
-    address constant _USDC_TOKEN_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address constant _STADER_CONFIG_ADDRESS =
+        0x4ABEF2263d5A5ED582FC9A9789a41D85b68d69DB;
+    address constant _REWARDS_CONTROLLER_ADDRESS =
+        0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
+    address constant _AETHX_TOKEN_ADDRESS =
+        0x1c0E06a0b1A4c160c17545FF2A951bfcA57C0002;
+    address constant _USDC_TOKEN_ADDRESS =
+        0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     // Add name and symbol for ERC20 token
     string constant _VAULT_NAME = "Stader Vault";
@@ -68,7 +75,9 @@ contract Tester is Test {
         // Instantiate the stakePoolManager interface
         stakePoolManager = IStaderStakePoolManager(_STADER_STAKE_POOL_ADDRESS);
         // Initialize PoolAddressesProvider and Pool
-        poolAddressesProvider = IPoolAddressesProvider(_POOL_ADDRESSES_PROVIDER);
+        poolAddressesProvider = IPoolAddressesProvider(
+            _POOL_ADDRESSES_PROVIDER
+        );
         // Initialize the pool with the PoolAddressesProvider
         pool = IPool(poolAddressesProvider.getPool());
         // Initialize Uniswap Router using the ISwapRouter interface casting
@@ -77,11 +86,17 @@ contract Tester is Test {
 
     function testConstructorInitialization() public view {
         // Verify that the vault administrator is the deployer (msg.sender)
-        assertEq(vault.vaultAdministrator(), address(this), "Vault administrator is incorrect");
+        assertEq(
+            vault.vaultAdministrator(),
+            address(this),
+            "Vault administrator is incorrect"
+        );
 
         // Verify that the stake pool manager address is set correctly
         assertEq(
-            address(vault.stakePoolManager()), _STADER_STAKE_POOL_ADDRESS, "Stake Pool Manager address is incorrect"
+            address(vault.stakePoolManager()),
+            _STADER_STAKE_POOL_ADDRESS,
+            "Stake Pool Manager address is incorrect"
         );
 
         // Verify that the PoolAddressesProvider is set correctly
@@ -92,13 +107,25 @@ contract Tester is Test {
         );
 
         // Verify that the Uniswap SwapRouter address is set correctly
-        assertEq(address(vault.swapRouter()), _SWAP_ROUTER_ADDRESS, "Uniswap SwapRouter address is incorrect");
+        assertEq(
+            address(vault.swapRouter()),
+            _SWAP_ROUTER_ADDRESS,
+            "Uniswap SwapRouter address is incorrect"
+        );
 
         // Verify that the WETH address is set correctly
-        assertEq(address(vault.wethToken()), _WETH_ADDRESS, "WETH address is incorrect");
+        assertEq(
+            address(vault.wethToken()),
+            _WETH_ADDRESS,
+            "WETH address is incorrect"
+        );
 
         // Verify that the StaderConfig address is set correctly
-        assertEq(address(vault.staderConfig()), _STADER_CONFIG_ADDRESS, "StaderConfig address is incorrect");
+        assertEq(
+            address(vault.staderConfig()),
+            _STADER_CONFIG_ADDRESS,
+            "StaderConfig address is incorrect"
+        );
 
         // Verify that the ETHx token is correctly fetched from StaderConfig
         assertEq(
@@ -123,11 +150,17 @@ contract Tester is Test {
 
         // Verify that the RewardsController address is set correctly
         assertEq(
-            address(vault.rewardsController()), _REWARDS_CONTROLLER_ADDRESS, "RewardsController address is incorrect"
+            address(vault.rewardsController()),
+            _REWARDS_CONTROLLER_ADDRESS,
+            "RewardsController address is incorrect"
         );
 
         // Verify that the aETHx token address is set correctly
-        assertEq(address(vault.aethxToken()), _AETHX_TOKEN_ADDRESS, "aETHx token address is incorrect");
+        assertEq(
+            address(vault.aethxToken()),
+            _AETHX_TOKEN_ADDRESS,
+            "aETHx token address is incorrect"
+        );
 
         // Verify that the vault shares name and symbol are set correctly
         assertEq(vault.name(), _VAULT_NAME, "Vault name is incorrect");
@@ -142,7 +175,10 @@ contract Tester is Test {
 
         // Verify that ETHx token approval for the UserWithdrawalManager is set to max
         assertEq(
-            vault.ethxToken().allowance(address(vault), address(vault.userWithdrawManager())),
+            vault.ethxToken().allowance(
+                address(vault),
+                address(vault.userWithdrawManager())
+            ),
             type(uint256).max,
             "ETHx token allowance for UserWithdrawalManager is incorrect"
         );
@@ -157,15 +193,27 @@ contract Tester is Test {
 
         // Check initial ETH balance for the user
         uint256 initialUserETHBalance = user.balance;
-        assertEq(initialUserETHBalance, depositAmount, "User's ETH balance should match the deposit amount");
+        assertEq(
+            initialUserETHBalance,
+            depositAmount,
+            "User's ETH balance should match the deposit amount"
+        );
 
         // Check initial Vault ETHx balance (should be zero)
         uint256 initialVaultEthxBalance = ethxToken.balanceOf(address(vault));
-        assertEq(initialVaultEthxBalance, 0, "Vault's initial ETHx balance should be zero");
+        assertEq(
+            initialVaultEthxBalance,
+            0,
+            "Vault's initial ETHx balance should be zero"
+        );
 
         // Check initial user Vault shares (should be zero)
         uint256 initialUserShares = vault.balanceOf(user);
-        assertEq(initialUserShares, 0, "User's initial Vault shares balance should be zero");
+        assertEq(
+            initialUserShares,
+            0,
+            "User's initial Vault shares balance should be zero"
+        );
 
         vm.startPrank(user);
         vault.depositETH{value: depositAmount}(user);
@@ -175,11 +223,19 @@ contract Tester is Test {
 
         uint256 afterUserShares = vault.balanceOf(user);
 
-        assertGt(afterUserShares, initialUserShares, "User initial shares should increase after deposit");
+        assertGt(
+            afterUserShares,
+            initialUserShares,
+            "User initial shares should increase after deposit"
+        );
 
         uint256 updatedVaultAethxBalance = aethxToken.balanceOf(address(vault));
 
-        assertGt(updatedVaultAethxBalance, 0, "Balance of aethx in vault should be greater than 0");
+        assertGt(
+            updatedVaultAethxBalance,
+            0,
+            "Balance of aethx in vault should be greater than 0"
+        );
     }
 
     function testDeposit() public {
@@ -187,15 +243,26 @@ contract Tester is Test {
 
         // Check the user's initial ETHx balance
         uint256 initialUserEthxBalance = ethxToken.balanceOf(user);
-        require(initialUserEthxBalance >= depositAmount, "User does not have enough ETHx tokens");
+        require(
+            initialUserEthxBalance >= depositAmount,
+            "User does not have enough ETHx tokens"
+        );
 
         // Check initial Vault balance
         uint256 initialVaultAethxBalance = aethxToken.balanceOf(address(vault));
-        assertEq(initialVaultAethxBalance, 0, "Vault's initial aETHx balance should be zero");
+        assertEq(
+            initialVaultAethxBalance,
+            0,
+            "Vault's initial aETHx balance should be zero"
+        );
 
         // Check initial user Vault shares (should be zero)
         uint256 initialUserShares = vault.balanceOf(user);
-        assertEq(initialUserShares, 0, "User's initial Vault shares balance should be zero");
+        assertEq(
+            initialUserShares,
+            0,
+            "User's initial Vault shares balance should be zero"
+        );
 
         // Approve the Vault to transfer ETHx tokens on behalf of the user
         vm.startPrank(user);
@@ -215,15 +282,27 @@ contract Tester is Test {
 
         // Check that the user received Vault shares
         uint256 updatedUserShares = vault.balanceOf(user);
-        assertEq(updatedUserShares, sharesMinted, "User's Vault shares should match the minted shares");
+        assertEq(
+            updatedUserShares,
+            sharesMinted,
+            "User's Vault shares should match the minted shares"
+        );
 
         // Check that the Vault's aETHx balance has increased
         uint256 updatedVaultAethxBalance = aethxToken.balanceOf(address(vault));
-        assertGt(updatedVaultAethxBalance, 0, "Vault's aETHx balance should be greater than 0 after deposit");
+        assertGt(
+            updatedVaultAethxBalance,
+            0,
+            "Vault's aETHx balance should be greater than 0 after deposit"
+        );
 
         // Check that the Vault's ETHx balance is zero (all staked in Aave)
         uint256 updatedVaultEthxBalance = ethxToken.balanceOf(address(vault));
-        assertEq(updatedVaultEthxBalance, 0, "Vault's ETHx balance should be zero after staking in Aave");
+        assertEq(
+            updatedVaultEthxBalance,
+            0,
+            "Vault's ETHx balance should be zero after staking in Aave"
+        );
     }
 
     function testWithdraw() public {
@@ -239,7 +318,11 @@ contract Tester is Test {
         uint256 totalAssetsBefore = vault.totalAssets();
 
         // Check initial vault shares (should be zero before deposit)
-        assertEq(initialVaultShares, 0, "Vault's initial shares should be zero");
+        assertEq(
+            initialVaultShares,
+            0,
+            "Vault's initial shares should be zero"
+        );
 
         // 1. First, deposit ETHx tokens to get shares
         vm.startPrank(user);
@@ -260,12 +343,18 @@ contract Tester is Test {
 
         // Check that the user received Vault shares
         uint256 updatedUserShares = vault.balanceOf(user);
-        assertEq(updatedUserShares, sharesMinted, "User's Vault shares should match the minted shares");
+        assertEq(
+            updatedUserShares,
+            sharesMinted,
+            "User's Vault shares should match the minted shares"
+        );
 
         // Check total assets in vault after deposit
         uint256 totalAssetsAfter = vault.totalAssets();
         assertEq(
-            totalAssetsAfter, totalAssetsBefore + depositAmount, "Total assets should increase by the deposited amount"
+            totalAssetsAfter,
+            totalAssetsBefore + depositAmount,
+            "Total assets should increase by the deposited amount"
         );
 
         // Update the total supply of shares minted by the vault after deposit
@@ -332,13 +421,25 @@ contract Tester is Test {
         vm.stopPrank();
 
         assertEq(
-            vault.totalAssets(), initialVaultAssets + depositAmount, "Vault assets should increase after the deposit"
+            vault.totalAssets(),
+            initialVaultAssets + depositAmount,
+            "Vault assets should increase after the deposit"
         );
-        assertEq(vault.totalSupply(), initialVaultShares + sharesMinted, "Shares should increase after the deposit");
+        assertEq(
+            vault.totalSupply(),
+            initialVaultShares + sharesMinted,
+            "Shares should increase after the deposit"
+        );
         assertGt(
-            initialUserEthxBalance, ethxToken.balanceOf(ethxUser), "ETHx balance of user should decrease after deposit"
+            initialUserEthxBalance,
+            ethxToken.balanceOf(ethxUser),
+            "ETHx balance of user should decrease after deposit"
         );
-        assertGt(vault.balanceOf(ethxUser), initialUserShares, "User shares should increase after the deposit");
+        assertGt(
+            vault.balanceOf(ethxUser),
+            initialUserShares,
+            "User shares should increase after the deposit"
+        );
 
         // 4. Simulate time progression for rewards to accrue
         uint256 timeFastForward = 30 days; // Example duration to accrue rewards
@@ -369,7 +470,11 @@ contract Tester is Test {
 
         // 2. Ensure the vault's SD Balance is correct
         uint256 initialSdBalance = sdToken.balanceOf(address(vault));
-        assertEq(initialSdBalance, staderAmount, "Vault should initially hold the specific amount of SD tokens");
+        assertEq(
+            initialSdBalance,
+            staderAmount,
+            "Vault should initially hold the specific amount of SD tokens"
+        );
         console.log("initialSdBalance:", initialSdBalance);
 
         // 3. Store initial ETH balance of the vault (before swap)
@@ -387,13 +492,23 @@ contract Tester is Test {
         uint256 finalSdBalance = sdToken.balanceOf(address(vault));
 
         // Assertions
-        assertGt(finalWethBalance, initialWethBalance, "Vault's WETH balance should increase after the swap");
+        assertGt(
+            finalWethBalance,
+            initialWethBalance,
+            "Vault's WETH balance should increase after the swap"
+        );
         assertEq(
-            finalSdBalance, initialSdBalance - staderAmount, "Vault's SD balance should decrease by the swapped amount"
+            finalSdBalance,
+            initialSdBalance - staderAmount,
+            "Vault's SD balance should decrease by the swapped amount"
         );
 
         // Verify the WETH amount received matches expectations (if you know an expected range)
-        assertGt(wethAmountReceived, 0, "WETH amount received should be greater than zero");
+        assertGt(
+            wethAmountReceived,
+            0,
+            "WETH amount received should be greater than zero"
+        );
     }
 
     function testDepositWETHForCompounding() public {
@@ -402,9 +517,8 @@ contract Tester is Test {
         // assign WETH tokens to vault
         deal(address(wethToken), address(vault), wethDeposit);
 
-        // Check totalAssets and total Supply of Vault
-        uint256 vaultInitialAssets = vault.totalAssets();
-        console.log("vaultInitialAssets:", vaultInitialAssets);
+        // Check totalSupply of Vault
+        uint256 vaultInitialSupply = vault.totalSupply();
 
         uint256 initialVaultWETHBalance = wethToken.balanceOf(address(vault));
         console.log("initialVaultWETHBalance: ", initialVaultWETHBalance);
@@ -430,6 +544,10 @@ contract Tester is Test {
             "Vault's aETHx balance should increase after deposit"
         );
 
-        assertGt(vaultUpdatedAssets, vaultInitialAssets, "Vault's assets should increase after compounding");
+        assertGt(
+            vault.totalSupply(),
+            vaultInitialSupply,
+            "Vault's supply should increase after compounding"
+        );
     }
 }
