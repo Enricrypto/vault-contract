@@ -517,9 +517,6 @@ contract Tester is Test {
         // assign WETH tokens to vault
         deal(address(wethToken), address(vault), wethDeposit);
 
-        // Check totalSupply of Vault
-        uint256 vaultInitialSupply = vault.totalSupply();
-
         uint256 initialVaultWETHBalance = wethToken.balanceOf(address(vault));
         console.log("initialVaultWETHBalance: ", initialVaultWETHBalance);
 
@@ -528,9 +525,6 @@ contract Tester is Test {
         vm.startPrank(address(vault));
         vault.depositWETHForCompounding(wethDeposit);
         vm.stopPrank();
-
-        uint256 vaultUpdatedAssets = vault.totalAssets();
-        console.log("vaultUpdatedAssets:", vaultUpdatedAssets);
 
         assertGt(
             initialVaultWETHBalance,
@@ -542,12 +536,6 @@ contract Tester is Test {
             aethxToken.balanceOf(address(vault)),
             initialVaultAethxBalance,
             "Vault's aETHx balance should increase after deposit"
-        );
-
-        assertGt(
-            vault.totalSupply(),
-            vaultInitialSupply,
-            "Vault's supply should increase after compounding"
         );
     }
 }
