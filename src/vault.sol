@@ -47,6 +47,7 @@ contract Vault is ERC4626 {
 
     ///// EVENTS /////
     event Log(uint256 value);
+
     // Declare the event to log the withdrawal details
     event ETHxWithdrawnFromAave(uint256 amount);
     event WithdrawRequestCreated(uint256 requestId, address indexed receiver, uint256 amount);
@@ -59,6 +60,9 @@ contract Vault is ERC4626 {
     event DepositETHx(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     event ApprovalSet(address indexed spender, uint256 amount, bool success);
+
+    // Event to signal compounding success
+    event Compounded(uint256 totalAssetsBefore, uint256 totalAssetsAfter);
 
     /**
      * @dev Initializes the Vault contract with the addresses of essential components including
@@ -136,7 +140,7 @@ contract Vault is ERC4626 {
         // address(this) specifies that the ETHx tokens minted in return for the ETH are sent back to the Vault
         uint256 amountInETHx = stakePoolManager.deposit{value: msg.value}(address(this));
         require(amountInETHx > 0, "Failed to receive ETHx tokens");
-        // emit Log(this.totalAssets()); // Log the total assets in the vault
+        emit Log(this.totalAssets()); // Log the total assets in the vault
 
         // Step 2: Calculate the shares to mint using helper function
         shares = _previewDeposit(amountInETHx);
@@ -303,26 +307,37 @@ contract Vault is ERC4626 {
      * @param wethAmount The amount of WETH to deposit and compound.
      */
     function _depositWETHForCompounding(uint256 wethAmount) internal {
-        // 1. Unwrapp the WETH into ETH
+        // 1. Record the vault's totalAssets and totalSupply before compounding
+        uint256 totalAssetsBefore = totalAssets();
+
+        // 2. Unwrap the WETH into ETH
         wethToken.withdraw(wethAmount);
         uint256 ethAmount = wethAmount; // Since WETH is 1:1 convertible to ETH
-
-        // 2. Stake the ETH into Stader to minth ETHx tokens
         require(ethAmount > 0, "Deposit amount must be greater than zero");
+
+        // 3. Stake the ETH into Stader to mint ETHx tokens
         uint256 ethxAmount = stakePoolManager.deposit{value: ethAmount}(address(this));
         require(ethxAmount > 0, "Staking ETH failed, no ETHx received");
 
-        // 3. Record the vault's WETH balance before the deposit
+        // 4. Record the vault's aETHx balance before the deposit
         uint256 aEthxBalanceBefore = aethxToken.balanceOf(address(this));
 
-        // 4. Deposit ETHx tokens into Aave's pool to mint aETHx tokens
+        // 5. Deposit ETHx tokens into Aave's pool to mint aETHx tokens
         pool.supply(address(ethxToken), ethxAmount, address(this), 0); // No referral code
 
-        // 5. Record the vault's aETHx balance after the deposit
+        // 6. Record the vault's aETHx balance after the deposit
         uint256 aEthxBalanceAfter = aethxToken.balanceOf(address(this));
 
-        // 6. Ensure that the vault received aETHx in exchange
+        // 7. Ensure that the vault received aETHx in exchange
         require(aEthxBalanceAfter > aEthxBalanceBefore, "No aETHx received from Aave");
+
+        // 8. Ensure that the totalAssets of the vault has increased after compounding
+        uint256 totalAssetsAfter = totalAssets();
+
+        require(totalAssetsAfter > totalAssetsBefore, "Total assets did not increase after compounding");
+
+        // 6. Emit an event to signal compounding success
+        emit Compounded(totalAssetsBefore, totalAssetsAfter);
     }
 
     /**
