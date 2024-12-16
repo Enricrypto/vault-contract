@@ -8,7 +8,7 @@
 	path = lib/aave-v3-core
 	url = https://github.com/aave/aave-v3-core
 [submodule "lib/aave-v3-origin"]
-	path = lib/aave-v3-core
+	path = lib/aave-v3-origin
 	url = https://github.com/aave-dao/aave-v3-origin
 [submodule "lib/ethx"]
 	path = lib/ethx
