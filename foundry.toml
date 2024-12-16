@@ -1,18 +1,13 @@
 [profile.default]
+fs_permissions = [{ access = "read", path = "./"}]
+evm_version = "shanghai"
 src = "src"
 out = "out"
-libs = ["lib"]
-remappings = [
-  "openzeppelin-contracts=/Users/enriqueibarra/vault-contract/lib/openzeppelin-contracts/",
-  "openzeppelin=/Users/enriqueibarra/vault-contract/lib/openzeppelin-contracts/contracts/",
-  "v3-core=/Users/enriqueibarra/vault-contract/lib/v3-core/",
-  "v3-periphery=/Users/enriqueibarra/vault-contract/lib/v3-periphery/",
-  "aave-v3-core=/Users/enriqueibarra/vault-contract/lib/aave-v3-core/",
-  "aave-v3-origin=/Users/enriqueibarra/vault-contract/lib/aave-v3-origin/"
-]
+libs = ["lib"] # Points to your lib directory where dependencies are stored
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
-[profile.anvil]
-fork_url = "https://mainnet.infura.io/v3/080ce310be6f452bacc7868005900063"
-fork_block_number = 17300000  # Example block number
+[rpc_endpoints]
+mainnet = "${ETH_RPC_URL}" 
+
+
