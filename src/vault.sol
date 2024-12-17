@@ -23,8 +23,8 @@ import "lib/aave-v3-origin/src/contracts/rewards/interfaces/IRewardsController.s
 import "lib/aave-v3-origin/src/contracts/rewards/interfaces/IRewardsDistributor.sol";
 
 // Import Uniswap's interfaces
-import "lib/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import "lib/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "./Interfaces/ISwapRouter.sol";
+import "./Interfaces/TransferHelper.sol";
 
 contract Vault is ERC4626 {
     IPool public pool; // Aave Pool Interface
