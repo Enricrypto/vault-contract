@@ -1,0 +1,28 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main  # Ensures we use the 'main' branch
+
+      - name: Install dependencies
+        run: |
+          echo "Installing dependencies..."
+          # Add your dependency installation commands here
+
+      - name: Build project
+        run: |
+          echo "Building the project..."
+          # Add your build commands here
+
