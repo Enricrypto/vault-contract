@@ -2,25 +2,25 @@
 pragma solidity ^0.8.10;
 
 // OpenZeppelin's ERC-4626, ERC-20 contracts and IERC20 interface
-import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol";
-import "lib/openzeppelin-contracts/contracts/interfaces/IERC20.sol";
+import "./Interfaces/ERC20.sol";
+import "./Interfaces/ERC4626.sol";
+import "./Interfaces/IERC20.sol";
 
 // Aave V3 Pool interface for deposit/withdraw functionality
 import "lib/aave-v3-core/contracts/interfaces/IPool.sol";
 import "lib/aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol";
 
 // Interfaces for Stader's ETHx integration
-import "lib/ethx/contracts/interfaces/IStaderConfig.sol";
-import "lib/ethx/contracts/interfaces/IStaderStakePoolManager.sol";
-import "lib/ethx/contracts/interfaces/IUserWithdrawalManager.sol";
+import "./Interfaces/IStaderConfig.sol";
+import "./Interfaces/IStaderStakePoolManager.sol";
+import "./Interfaces/IUserWithdrawalManager.sol";
 
 // import WETH Interface
 import "./Interfaces/IWETH.sol";
 
 // import IRewardsController and IRewardsDistributor interfaces from Aave V3 Origin
-import "lib/aave-v3-origin/src/contracts/rewards/interfaces/IRewardsController.sol";
-import "lib/aave-v3-origin/src/contracts/rewards/interfaces/IRewardsDistributor.sol";
+import "lib/aave-v3-origin/src/periphery/contracts/rewards/interfaces/IRewardsController.sol";
+import "lib/aave-v3-origin/src/periphery/contracts/rewards/interfaces/IRewardsDistributor.sol";
 
 // Import Uniswap's interfaces
 import "./Interfaces/ISwapRouter.sol";
