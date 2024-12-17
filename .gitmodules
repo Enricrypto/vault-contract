@@ -10,3 +10,6 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/ethx"]
+	path = lib/ethx
+	url = https://github.com/stader-labs/ethx
