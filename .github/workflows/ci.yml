@@ -17,6 +17,7 @@ steps:
         with:
           submodules: true  # Ensures submodules are fetched
           fetch-depth: 0    # Fetches the full history, avoiding shallow clone issues
+
 # Set up Foundry
       - name: Set up Foundry
         run: |
