@@ -10,19 +10,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
+steps:
+      # Checkout the repository with submodules
+      - name: Checkout repository with submodules
         uses: actions/checkout@v4
         with:
-          ref: main  # Ensures we use the 'main' branch
-
-      - name: Install dependencies
+          submodules: true  # Ensures submodules are fetched
+          fetch-depth: 0    # Fetches the full history, avoiding shallow clone issues
+# Set up Foundry
+      - name: Set up Foundry
         run: |
-          echo "Installing dependencies..."
-          # Add your dependency installation commands here
+          curl -L https://foundry.paradigm.xyz | bash
+          source $HOME/.foundry/bin/foundryup
+          
+      # Install Foundry dependencies
+      - name: Install Foundry dependencies
+        run: |
+          forge install  # Installs dependencies (if any) for Foundry
 
+      # Build the project
       - name: Build project
         run: |
-          echo "Building the project..."
-          # Add your build commands here
+          forge build  # Build the smart contracts using Foundry
 
+      # Optional: Run tests
+      - name: Run tests
+        run: |
+          forge test  # Run the tests (if you have any)
