@@ -54,15 +54,9 @@ interface IStaderConfig {
 
     function PERMISSIONLESS_SOCIALIZING_POOL() external view returns (bytes32);
 
-    function NODE_EL_REWARD_VAULT_IMPLEMENTATION()
-        external
-        view
-        returns (bytes32);
+    function NODE_EL_REWARD_VAULT_IMPLEMENTATION() external view returns (bytes32);
 
-    function VALIDATOR_WITHDRAWAL_VAULT_IMPLEMENTATION()
-        external
-        view
-        returns (bytes32);
+    function VALIDATOR_WITHDRAWAL_VAULT_IMPLEMENTATION() external view returns (bytes32);
 
     //SD Utility Pool
 
@@ -100,10 +94,7 @@ interface IStaderConfig {
     // Variables
     function getSocializingPoolCycleDuration() external view returns (uint256);
 
-    function getSocializingPoolOptInCoolingPeriod()
-        external
-        view
-        returns (uint256);
+    function getSocializingPoolOptInCoolingPeriod() external view returns (uint256);
 
     function getRewardsThreshold() external view returns (uint256);
 
@@ -115,10 +106,7 @@ interface IStaderConfig {
 
     function getMaxWithdrawAmount() external view returns (uint256);
 
-    function getMinBlockDelayToFinalizeWithdrawRequest()
-        external
-        view
-        returns (uint256);
+    function getMinBlockDelayToFinalizeWithdrawRequest() external view returns (uint256);
 
     function getWithdrawnKeyBatchSize() external view returns (uint256);
 
@@ -164,15 +152,9 @@ interface IStaderConfig {
 
     function getPermissionlessSocializingPool() external view returns (address);
 
-    function getNodeELRewardVaultImplementation()
-        external
-        view
-        returns (address);
+    function getNodeELRewardVaultImplementation() external view returns (address);
 
-    function getValidatorWithdrawalVaultImplementation()
-        external
-        view
-        returns (address);
+    function getValidatorWithdrawalVaultImplementation() external view returns (address);
 
     function getETHBalancePORFeedProxy() external view returns (address);
 
@@ -188,20 +170,13 @@ interface IStaderConfig {
     function getETHxToken() external view returns (address);
 
     //checks roles and stader contracts
-    function onlyStaderContract(
-        address _addr,
-        bytes32 _contractName
-    ) external view returns (bool);
+    function onlyStaderContract(address _addr, bytes32 _contractName) external view returns (bool);
 
     function onlyManagerRole(address account) external view returns (bool);
 
     function onlyOperatorRole(address account) external view returns (bool);
 
-    function onlySDRewardEntryRole(
-        address account
-    ) external view returns (bool);
+    function onlySDRewardEntryRole(address account) external view returns (bool);
 
-    function onlySDRewardApproverRole(
-        address account
-    ) external view returns (bool);
+    function onlySDRewardApproverRole(address account) external view returns (bool);
 }
