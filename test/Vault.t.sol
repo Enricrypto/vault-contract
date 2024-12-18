@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 // Docgen-SOLC: 0.8.15
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 // Import test utilities and required interfaces
 import {Test, console} from "lib/forge-std/src/Test.sol";
