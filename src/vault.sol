@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // OpenZeppelin's ERC-4626, ERC-20 contracts and IERC20 interface
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
