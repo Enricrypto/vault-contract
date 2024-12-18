@@ -1,24 +1,3 @@
 [submodule "lib/aave-v3-core"]
-	path = lib/aave-v3-core
-	url = https://github.com/aave/aave-v3-core
-	branch = master
-[submodule "lib/aave-v3-origin"]
-	path = lib/aave-v3-origin
-	url = https://github.com/aave-dao/aave-v3-origin
-	branch = main
-[submodule "lib/openzeppelin-contracts"]
-	path = lib/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-	tag = v4.9.0 
-[submodule "lib/forge-std"]
-	path = lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-	tag = v1.9.4
-[submodule "lib/ethx"]
-	path = lib/ethx
-	url = https://github.com/stader-labs/ethx
-	branch = main
-[submodule "lib/v3-periphery"]
-	path = lib/v3-periphery
-	url = https://github.com/Uniswap/v3-periphery
-	branch = main
+  path = lib/aave-v3-core
+  url = https://github.com/aave/aave-v3-core.git
