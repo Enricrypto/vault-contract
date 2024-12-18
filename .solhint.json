@@ -1,0 +1,19 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "quotes": ["error", "double"],
+    "max-line-length": ["warn", 120],
+    "indent": ["error", 4], 
+    "custom-errors": "off", 
+    "reason-string": "off", 
+    "no-console": "off"
+  }, 
+  "overrides": [
+    {
+      "files": ["test/*.sol"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}

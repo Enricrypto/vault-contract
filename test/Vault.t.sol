@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 
 // Import test utilities and required interfaces
 import {Test, console} from "lib/forge-std/src/Test.sol";
-import "../src/Vault.sol";
+import {Vault} from "../src/Vault.sol";
 
 contract Tester is Test {
     // Declare Vault instance
@@ -27,18 +27,18 @@ contract Tester is Test {
     ISwapRouter public swapRouter;
 
     // Constants for addresses
-    address constant _STADER_STAKE_POOL_ADDRESS = 0xcf5EA1b38380f6aF39068375516Daf40Ed70D299;
-    address constant _POOL_ADDRESSES_PROVIDER = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
-    address constant _SWAP_ROUTER_ADDRESS = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-    address constant _WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address constant _STADER_CONFIG_ADDRESS = 0x4ABEF2263d5A5ED582FC9A9789a41D85b68d69DB;
-    address constant _REWARDS_CONTROLLER_ADDRESS = 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
-    address constant _AETHX_TOKEN_ADDRESS = 0x1c0E06a0b1A4c160c17545FF2A951bfcA57C0002;
-    address constant _USDC_TOKEN_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address public constant _STADER_STAKE_POOL_ADDRESS = 0xcf5EA1b38380f6aF39068375516Daf40Ed70D299;
+    address public constant _POOL_ADDRESSES_PROVIDER = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
+    address public constant _SWAP_ROUTER_ADDRESS = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
+    address public constant _WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant _STADER_CONFIG_ADDRESS = 0x4ABEF2263d5A5ED582FC9A9789a41D85b68d69DB;
+    address public constant _REWARDS_CONTROLLER_ADDRESS = 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
+    address public constant _AETHX_TOKEN_ADDRESS = 0x1c0E06a0b1A4c160c17545FF2A951bfcA57C0002;
+    address public constant _USDC_TOKEN_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     // Add name and symbol for ERC20 token
-    string constant _VAULT_NAME = "Stader Vault";
-    string constant _VAULT_SYMBOL = "sETHx";
+    string public constant _VAULT_NAME = "Stader Vault";
+    string public constant _VAULT_SYMBOL = "sETHx";
 
     /// @notice Setup the test environment
     function setUp() public {
@@ -370,16 +370,13 @@ contract Tester is Test {
         // 2. Ensure the vault's SD Balance is correct
         uint256 initialSdBalance = sdToken.balanceOf(address(vault));
         assertEq(initialSdBalance, staderAmount, "Vault should initially hold the specific amount of SD tokens");
-        console.log("initialSdBalance:", initialSdBalance);
 
         // 3. Store initial ETH balance of the vault (before swap)
         uint256 initialWethBalance = ethxToken.balanceOf(address(vault));
-        console.log("initialWethBalance:", initialWethBalance);
 
         // 4. Trigger the swap function to convert SD to ETHx
         vm.startPrank(address(vault));
         uint256 wethAmountReceived = vault.swapStaderTokensToWETH(staderAmount);
-        console.log("wethAmountReceived:", wethAmountReceived);
         vm.stopPrank();
 
         // 5. Verify balances after swap
@@ -404,10 +401,8 @@ contract Tester is Test {
 
         // Check totalAssets and total Supply of Vault
         uint256 vaultInitialAssets = vault.totalAssets();
-        console.log("vaultInitialAssets:", vaultInitialAssets);
 
         uint256 initialVaultWETHBalance = wethToken.balanceOf(address(vault));
-        console.log("initialVaultWETHBalance: ", initialVaultWETHBalance);
 
         uint256 initialVaultAethxBalance = aethxToken.balanceOf(address(vault));
 
@@ -416,7 +411,6 @@ contract Tester is Test {
         vm.stopPrank();
 
         uint256 vaultUpdatedAssets = vault.totalAssets();
-        console.log("vaultUpdatedAssets:", vaultUpdatedAssets);
 
         assertGt(
             initialVaultWETHBalance,

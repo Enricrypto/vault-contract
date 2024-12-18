@@ -1,6 +1,0 @@
-@aave-v3-core/ = lib/aave-v3-core/
-@aave-v3-origin/ = lib/aave-v3-origin/
-@openzeppelin/ = lib/openzeppelin-contracts/
-@forge-std/ = lib/forge-std/
-@ethx/ = lib/ethx/
-@v3-periphery/ = lib/v3-periphery/
