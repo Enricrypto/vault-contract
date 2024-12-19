@@ -1,12 +1,19 @@
 # foundry.toml
 [profile.default]
-solc_version = "0.8.0"
 
-fs_permissions = [{ access = "read", path = "./"}]
 evm_version = "shanghai"
 src = "src"
 out = "out"
 libs = ["lib"]  # Points to your lib directory where dependencies are stored
+
+[profile.default.dependencies]
+"aave-v3-core" = { version = "v1.19.4-1-g782f5191", solc = "0.8.0" }
+"aave-v3-origin" = { version = "v3.1.0-165-g1dab6e5", solc = "0.8.10" }
+"ethx" = { version = "v1.1.0-25-g781525e", solc = "0.8.16" }
+"forge-std" = { version = "v1.9.4", solc = ">=0.6.2 <0.8.10"}
+"openzeppelin-contracts" = { version = "v4.8.0-808-gbf4d40d8", solc = "0.8.20" }
+"v3-core" = { version = "v1.0.0-12-gd8b1c63", solc = "0.7.6"}
+"v3-periphery" = { version = "v1.3.0-20-g0682387", solc = "0.7.6"}
 
 [rpc_endpoints]
 mainnet = "${ETH_RPC_URL}"  # Change this to your actual RPC endpoint URL if needed
