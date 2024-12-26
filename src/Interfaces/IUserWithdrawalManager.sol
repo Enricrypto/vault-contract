@@ -28,24 +28,13 @@ interface IUserWithdrawalManager {
         string _referralId
     );
     event WithdrawRequestReceived(
-        address indexed _msgSender,
-        address _recipient,
-        uint256 _requestId,
-        uint256 _sharesAmount,
-        uint256 _etherAmount
+        address indexed _msgSender, address _recipient, uint256 _requestId, uint256 _sharesAmount, uint256 _etherAmount
     );
     // finalized request upto `requestId`
     event FinalizedWithdrawRequest(uint256 requestId);
-    event RequestRedeemed(
-        address indexed _sender,
-        address _recipient,
-        uint256 _ethTransferred
-    );
+    event RequestRedeemed(address indexed _sender, address _recipient, uint256 _ethTransferred);
     event RecipientAddressUpdated(
-        address indexed _sender,
-        uint256 _requestId,
-        address _oldRecipient,
-        address _newRecipient
+        address indexed _sender, uint256 _requestId, address _oldRecipient, address _newRecipient
     );
     event ReceivedETH(uint256 _amount);
 
@@ -59,9 +48,7 @@ interface IUserWithdrawalManager {
 
     function maxNonRedeemedUserRequestCount() external view returns (uint256);
 
-    function userWithdrawRequests(
-        uint256
-    )
+    function userWithdrawRequests(uint256)
         external
         view
         returns (
@@ -72,29 +59,19 @@ interface IUserWithdrawalManager {
             uint256 requestTime
         );
 
-    function requestIdsByUserAddress(
-        address,
-        uint256
-    ) external view returns (uint256);
+    function requestIdsByUserAddress(address, uint256) external view returns (uint256);
 
     function updateFinalizationBatchLimit(uint256 _paginationLimit) external;
 
-    function requestWithdraw(
-        uint256 _ethXAmount,
-        address receiver,
-        string calldata referralId
-    ) external returns (uint256);
+    function requestWithdraw(uint256 _ethXAmount, address receiver, string calldata referralId)
+        external
+        returns (uint256);
 
-    function requestWithdraw(
-        uint256 _ethXAmount,
-        address receiver
-    ) external returns (uint256);
+    function requestWithdraw(uint256 _ethXAmount, address receiver) external returns (uint256);
 
     function finalizeUserWithdrawalRequest() external;
 
     function claim(uint256 _requestId) external;
 
-    function getRequestIdsByUser(
-        address _owner
-    ) external view returns (uint256[] memory);
+    function getRequestIdsByUser(address _owner) external view returns (uint256[] memory);
 }

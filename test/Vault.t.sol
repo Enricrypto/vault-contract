@@ -73,16 +73,6 @@ contract Tester is Test {
         aethxToken = IERC20(vault.aethxToken()); // Initialize the aETHx token interface from vault
         usdcToken = IERC20(vault.usdcToken()); // Initialize the USDC token interface from vault
         wethToken = IWETH(vault.wethToken()); // Initialize the WETH token interface from vault
-        // Instantiate the stakePoolManager interface
-        stakePoolManager = IStaderStakePoolManager(_STADER_STAKE_POOL_ADDRESS);
-        // Initialize PoolAddressesProvider and Pool
-        poolAddressesProvider = IPoolAddressesProvider(
-            _POOL_ADDRESSES_PROVIDER
-        );
-        // Initialize the pool with the PoolAddressesProvider
-        pool = IPool(poolAddressesProvider.getPool());
-        // Initialize Uniswap Router using the ISwapRouter interface casting
-        swapRouter = ISwapRouter(_SWAP_ROUTER_ADDRESS);
     }
 
     function testConstructorInitialization() public view {
@@ -169,7 +159,7 @@ contract Tester is Test {
 
         // Verify that ETHx token approval for the Aave pool is set to max
         assertEq(
-            vault.ethxToken().allowance(address(vault), address(pool)),
+            vault.ethxToken().allowance(address(vault), address(vault.pool())),
             type(uint256).max,
             "ETHx token allowance for Aave pool is incorrect"
         );
@@ -240,7 +230,10 @@ contract Tester is Test {
     }
 
     function testDeposit() public {
+        uint256 depositETHx = 20 ether; // amount to deposit initially to user account
         uint256 depositAmount = 10 ether; // amount of ETHx to deposit
+
+        deal(address(ethxToken), user, depositETHx);
 
         // Check the user's initial ETHx balance
         uint256 initialUserEthxBalance = ethxToken.balanceOf(user);
@@ -307,12 +300,17 @@ contract Tester is Test {
     }
 
     function testWithdraw() public {
+        uint256 depositETHx = 200 ether; // amount to deposit initially to user account
         uint256 depositAmount = 100 ether; // Amount of ETHx to deposit
         uint256 withdrawAmount = 50 ether; // Amount of ETHx to withdraw
 
+        deal(address(ethxToken), user, depositETHx);
+
         // Check initial balances for user and vault
         uint256 initialUserEthxBalance = ethxToken.balanceOf(user);
+
         uint256 initialReceiverEthxBalance = ethxToken.balanceOf(receiver);
+
         // Check initial amount of shares minted by the vault
         uint256 initialVaultShares = vault.totalSupply();
         // Check initial total assets inside the vault before deposit
@@ -363,10 +361,8 @@ contract Tester is Test {
 
         // 2. Now, proceed to withdraw ETHx from the vault
         vm.startPrank(user);
-
         // Withdraw ETHx (this will burn shares and transfer ETHx back to the receiver)
         uint256 burnedShares = vault.withdraw(withdrawAmount, receiver, user);
-
         vm.stopPrank();
 
         // 3. Assertions after withdrawal

@@ -45,25 +45,8 @@ contract Vault is ERC4626 {
     uint24 public constant POOLFEE = 3000;
 
     ///// EVENTS /////
-    event Log(uint256 value);
 
-    // Declare the event to log the withdrawal details
-    event ETHxWithdrawnFromAave(uint256 amount);
-    event WithdrawRequestCreated(
-        uint256 requestId,
-        address indexed receiver,
-        uint256 amount
-    );
-    // Event for minted shares on DepositETH()
-    event SharesMinted(address indexed receiver, uint256 shares);
-
-    event WithdrawRequestFinalized(uint256 requestId);
-    event SharesBurned(address indexed receiver, uint256 sharesBurned);
-    event Withdrawal(
-        address indexed receiver,
-        uint256 amount,
-        uint256 sharesBurned
-    );
+    // Event for deposit ETHx
     event DepositETHx(
         address indexed sender,
         address indexed owner,
@@ -71,7 +54,19 @@ contract Vault is ERC4626 {
         uint256 shares
     );
 
-    event ApprovalSet(address indexed spender, uint256 amount, bool success);
+    // Event for minted shares on DepositETH()
+    event SharesMinted(address indexed receiver, uint256 shares);
+
+    // Events for withdrawal
+    event ETHxWithdrawnFromAave(uint256 amount);
+    event WithdrawRequestCreated(
+        uint256 requestId,
+        address indexed receiver,
+        uint256 amount
+    );
+
+    // Event to check burned shares
+    event SharesBurned(address indexed receiver, uint256 sharesBurned);
 
     // Event to signal compounding success
     event Compounded(uint256 totalAssetsBefore, uint256 totalAssetsAfter);
@@ -94,43 +89,24 @@ contract Vault is ERC4626 {
         address _staderConfigAddress,
         address _rewardsControllerAddress,
         address _aethxAddress,
-        string memory _name, // string for the ERC20 token name (vault shares)
-        string memory _symbol // string for the ERC20 token symbol
+        string memory _name,
+        string memory _symbol
     )
-        ERC20(_name, _symbol) // vault shares. Call the ERC20 constructor for name and symbol
+        ERC20(_name, _symbol)
         ERC4626(IERC20(IStaderConfig(_staderConfigAddress).getETHxToken()))
     {
-        // Initialize the vault administrator to the contract deployer (msg.sender)
         vaultAdministrator = msg.sender;
-        // Initialize the Stader Pool interface, pool for staking operations on Stader
-        stakePoolManager = IStaderStakePoolManager(_stakePoolAddress);
-        // Initialize the Aave Pool interface.
-        poolAddressesProvider = IPoolAddressesProvider(_poolAddressesProvider);
-        pool = IPool(poolAddressesProvider.getPool());
-        // Initialize the Stader config.
-        staderConfig = IStaderConfig(_staderConfigAddress);
-        // Get the ethxToken token address from Stader config.
-        ethxToken = IERC20(staderConfig.getETHxToken());
-        // SD Token address
-        sdToken = IERC20(staderConfig.getStaderToken());
-        // Uniswap Router address for performing token swaps
-        swapRouter = ISwapRouter(_swapRouterAddress);
-        // Retrieve and set the user withdrawal manager address from Stader config
-        userWithdrawManager = IUserWithdrawalManager(
-            staderConfig.getUserWithdrawManager()
+        _initializeStaderComponents(_stakePoolAddress, _staderConfigAddress);
+        _initializeAaveComponents(
+            _poolAddressesProvider,
+            _rewardsControllerAddress
         );
-        // WETH interface for handling wrapped/unwrapped ETH.
-        wethToken = IWETH(_wethAddress);
-        // Setup Aave Rewards Controller to claim rewards (like SD tokens) accrued from Aave-based assets like aETHx.
-        rewardsController = IRewardsController(_rewardsControllerAddress);
-        // aETHx token interface, Aave's yield-bearing token that represents staked ETHx in the Aave Pool.
-        aethxToken = IERC20(_aethxAddress);
-        // USDC token interface
-        usdcToken = IERC20(_usdcAddress);
-        // Vault approves the Aave pool to spend ETHx tokens from the vault
-        ethxToken.approve(address(pool), type(uint256).max);
-        // Approve Stader (userWithdrawManager) to withdraw ETHx tokens from the vault
-        // ethxToken.approve(address(userWithdrawManager), type(uint256).max);
+        _initializeTokens(
+            _swapRouterAddress,
+            _wethAddress,
+            _usdcAddress,
+            _aethxAddress
+        );
     }
 
     modifier onlyOwner() {
@@ -154,49 +130,40 @@ contract Vault is ERC4626 {
     ) public payable returns (uint256 shares) {
         require(msg.value > 0, "Deposit amount must be greater than zero");
 
-        // Step 1: Convert ETH to ETHx via Stader's stake pool manager
-        // msg.value is the ETH received by the vault
-        // address(this) specifies that the ETHx tokens minted in return for the ETH are sent back to the Vault
-        uint256 amountInETHx = stakePoolManager.deposit{value: msg.value}(
-            address(this)
-        );
-        require(amountInETHx > 0, "Failed to receive ETHx tokens");
-        emit Log(this.totalAssets()); // Log the total assets in the vault
+        // Step 1: Convert ETH to ETHx via Stader's stake pool
+        uint256 assets = _convertEthToEthx(msg.value);
+        require(assets > 0, "Failed to receive ETHx tokens");
 
-        // Step 2: Calculate the shares to mint using helper function
-        shares = _previewDeposit(amountInETHx);
-        emit SharesMinted(_receiver, shares);
+        // Step 2: Calculate shares
+        shares = _previewDeposit(assets);
 
         // Step 3: Deposit ETHx into Aave
-        pool.supply(address(ethxToken), amountInETHx, address(this), 0);
+        _depositEthxToAave(assets);
 
-        // Step 4: Update vault and mint shares to receiver
-        _mint(_receiver, shares); // Mint shares for the receiver, following ERC-4626 standard
+        // Step 4: Mint shares to the receiver
+        _mintShares(_receiver, shares);
 
-        return shares; // Return the amount of shares minted
+        return shares;
     }
 
     function deposit(
         uint256 _assets,
         address _receiver
     ) public override returns (uint256 shares) {
-        require(_assets > 0, "Deposit amount must be greater than zero");
-        require(
-            ethxToken.allowance(msg.sender, address(this)) >= _assets,
-            "Insufficient ETHx allowance"
-        );
+        // Step 1: Validate input and allowance
+        _validateDeposit(_assets, msg.sender);
 
-        // Step 1: Transfer ETHx from the user to the vault
-        ethxToken.transferFrom(msg.sender, address(this), _assets);
+        // Step 2: Transfer ETHx from the user to the vault
+        _transferEthxToVault(_assets, msg.sender);
 
-        // Step 2: Calculate the shares to mint using helper function
+        // Step 3: Calculate the shares to mint
         shares = _previewDeposit(_assets);
 
-        // Step 3: Stake ETHx into Aave
-        pool.supply(address(ethxToken), _assets, address(this), 0);
+        // Step 4: Stake ETHx into Aave
+        _depositEthxToAave(_assets);
 
-        // Step 4: Mint shares to the receiver
-        _mint(_receiver, shares);
+        // Step 5: Mint shares to the receiver
+        _mintShares(_receiver, shares);
 
         emit DepositETHx(msg.sender, _receiver, _assets, shares);
 
@@ -216,24 +183,14 @@ contract Vault is ERC4626 {
         address _receiver,
         address _owner
     ) public override returns (uint256 shares) {
-        // Step 1: Withdraw ETHx from Aave pool to the vault (converting aETHx to ETHx)
-        pool.withdraw(address(ethxToken), _amount, address(this));
+        // Step 1: Withdraw ETHx from Aave to the vault
+        _withdrawFromAave(_amount);
 
-        // Check balance of ETHx in the Vault after the withdrawal
-        uint256 ethxBalanceAfterAave = ethxToken.balanceOf(address(this));
-        require(
-            ethxBalanceAfterAave >= _amount,
-            "Insufficient ETHx after Aave withdrawal"
-        );
+        // Step 2: Validate ETHx balance after Aave withdrawal
+        _validateEthxBalanceAfterWithdrawal(_amount);
 
-        // Emit event for ETHx withdrawal
-        emit ETHxWithdrawnFromAave(_amount);
-
-        // Step 2: Burn the user's shares based on the withdrawn ETHx balance
-        shares = super.withdraw(_amount, _receiver, _owner);
-
-        // Emit event after burning shares
-        emit SharesBurned(_receiver, shares);
+        // Step 3: Burn shares and transfer ETHx to the receiver
+        shares = _burnSharesAndTransfer(_amount, _receiver, _owner);
 
         return shares;
     }
@@ -273,7 +230,58 @@ contract Vault is ERC4626 {
         return totalBalance;
     }
 
-    //// HELPER FUNCTIONS ////
+    /// === HELPER FUNCTIONS FOR INITIALIZATION === ///
+
+    function _initializeStaderComponents(
+        address _stakePoolAddress,
+        address _staderConfigAddress
+    ) private {
+        stakePoolManager = IStaderStakePoolManager(_stakePoolAddress);
+        staderConfig = IStaderConfig(_staderConfigAddress);
+        ethxToken = IERC20(staderConfig.getETHxToken());
+        sdToken = IERC20(staderConfig.getStaderToken());
+        userWithdrawManager = IUserWithdrawalManager(
+            staderConfig.getUserWithdrawManager()
+        );
+        ethxToken.approve(address(userWithdrawManager), type(uint256).max);
+    }
+
+    function _initializeAaveComponents(
+        address _poolAddressesProvider,
+        address _rewardsControllerAddress
+    ) private {
+        poolAddressesProvider = IPoolAddressesProvider(_poolAddressesProvider);
+        pool = IPool(poolAddressesProvider.getPool());
+        rewardsController = IRewardsController(_rewardsControllerAddress);
+    }
+
+    function _initializeTokens(
+        address _swapRouterAddress,
+        address _wethAddress,
+        address _usdcAddress,
+        address _aethxAddress
+    ) private {
+        swapRouter = ISwapRouter(_swapRouterAddress);
+        wethToken = IWETH(_wethAddress);
+        usdcToken = IERC20(_usdcAddress);
+        aethxToken = IERC20(_aethxAddress);
+        ethxToken.approve(address(pool), type(uint256).max);
+    }
+
+    /// === HELPER FUNCTIONS FOR DEPOSIT === ///
+
+    // Helper function: Convert ETH to ETHx
+    function _convertEthToEthx(uint256 ethAmount) internal returns (uint256) {
+        uint256 ethxAmount = stakePoolManager.deposit{value: ethAmount}(
+            address(this)
+        );
+        return ethxAmount;
+    }
+
+    // Helper function: Deposit ETHx to Aave
+    function _depositEthxToAave(uint256 ethxAmount) internal {
+        pool.supply(address(ethxToken), ethxAmount, address(this), 0);
+    }
 
     function _previewDeposit(uint256 amount) internal view returns (uint256) {
         uint256 supply = totalSupply();
@@ -282,6 +290,59 @@ contract Vault is ERC4626 {
         }
         return (amount * supply) / totalAssets();
     }
+
+    // Helper function: Mint shares to the receiver
+    function _mintShares(address receiver, uint256 shares) internal {
+        _mint(receiver, shares);
+        emit SharesMinted(receiver, shares);
+    }
+
+    // Helper function: Validates the deposit input and allowance
+    function _validateDeposit(
+        uint256 _assets,
+        address _depositor
+    ) internal view {
+        require(_assets > 0, "Deposit amount must be greater than zero");
+        require(
+            ethxToken.allowance(_depositor, address(this)) >= _assets,
+            "Insufficient ETHx allowance"
+        );
+    }
+
+    function _transferEthxToVault(
+        uint256 _assets,
+        address _depositor
+    ) internal {
+        ethxToken.transferFrom(_depositor, address(this), _assets);
+    }
+
+    /// === HELPER FUNCTIONS FOR WITHDRAW === ///
+
+    function _withdrawFromAave(uint256 _amount) internal {
+        pool.withdraw(address(ethxToken), _amount, address(this));
+        emit ETHxWithdrawnFromAave(_amount);
+    }
+
+    function _validateEthxBalanceAfterWithdrawal(
+        uint256 _amount
+    ) internal view {
+        uint256 ethxBalanceAfterAave = ethxToken.balanceOf(address(this));
+        require(
+            ethxBalanceAfterAave >= _amount,
+            "Insufficient ETHx after Aave withdrawal"
+        );
+    }
+
+    function _burnSharesAndTransfer(
+        uint256 _amount,
+        address _receiver,
+        address _owner
+    ) internal returns (uint256 shares) {
+        shares = super.withdraw(_amount, _receiver, _owner);
+        emit SharesBurned(_receiver, shares);
+    }
+
+    /// === HELPER FUNCTIONS FOR CLAIMING AND COMPOUNDING === ///
 
     /**
      * @dev Claims rewards from Aave for the vault. Only the Vault Administrator can call this function.
@@ -395,18 +456,8 @@ contract Vault is ERC4626 {
         emit Compounded(totalAssetsBefore, totalAssetsAfter);
     }
 
-    /**
-     * @dev Allows the vault administrator to change the vault's administrator.
-     * This function can only be called by the current vault administrator.
-     * @param newAdministrator The address of the new vault administrator.
-     */
-    function setVaultAdministrator(
-        address newAdministrator
-    ) external onlyOwner {
-        vaultAdministrator = newAdministrator;
-    }
+    /// === HELPER FUNCTIONS FOR TESTING === ///
 
-    // Add this function to your Vault contract for testing purposes only
     function claimRewards() external returns (uint256) {
         return _claimRewards();
     }
@@ -421,6 +472,21 @@ contract Vault is ERC4626 {
         return _depositWETHForCompounding(_wethAmount);
     }
 
+    /// === HELPER FUNCTIONS FOR WRAPPING / UNWRAPPING ETH === ///
+
     // payable callback function to unwrap WETH into ETH
     receive() external payable {}
+
+    //// HELPER FUNCTION FOR ADMIN SETUP////
+
+    /**
+     * @dev Allows the vault administrator to change the vault's administrator.
+     * This function can only be called by the current vault administrator.
+     * @param newAdministrator The address of the new vault administrator.
+     */
+    function setVaultAdministrator(
+        address newAdministrator
+    ) external onlyOwner {
+        vaultAdministrator = newAdministrator;
+    }
 }
